@@ -1,0 +1,302 @@
+openapi: 3.0.0
+info:
+  title: Reddit Scour App
+  description: App allowing reddit data scouring, with some generic patterns, but also targetting /r/formula1 subreddit
+  version: '1.0.0'
+  contact:
+    name: Filip Palach
+    email: filippalach@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://0.0.0.0:1122/api/v1
+paths:
+  /auth/{user_id}:
+    get:
+      tags:
+        - auth
+      summary: Return JWT token
+      operationId: app.generate_token
+      parameters:
+      - name: user_id
+        description: User unique identifier
+        in: path
+        required: true
+        example: 12
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: JWT token obtained
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  jwt:
+                    type: string
+  /secret:
+    get:
+      tags:
+        - auth
+      summary: Return secret
+      operationId: app.get_secret
+      responses:
+        '200':
+          description: secret response
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                  token_info:
+                    type: object
+                    properties:
+                      exp:
+                        type: integer
+                      iat:
+                        type: integer
+                      iss:
+                        type: string
+                      sub:
+                        type: string
+      security:
+      - jwt: ['secret']
+  /retrieve_posts/subreddit/{subreddit}:
+    get:
+      tags :
+        - generic reddit
+      summary: Return given number of posts for given subreddit
+      operationId: app.retrieve_posts
+      parameters:
+      - name: subreddit
+        description: Name of the subreddit
+        in: path
+        required: true
+        example: formula1
+        schema:
+          type: string
+      - name: number
+        description: The number of posts to retrieve
+        in: query
+        required: true
+        example: 20
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Returns posts
+          content:
+            'application/json':
+              schema:
+                type: object
+  /find/subreddit/{subreddit}/:
+    get:
+      tags :
+        - generic reddit
+      summary: Returns newest post info when phrase matches post's title for given subreddit
+      operationId: app.find_phrase_post
+      parameters:
+      - name: subreddit
+        description: Name of the subreddit
+        in: path
+        required: true
+        example: formula1
+        schema:
+          type: string
+      - name: phrase
+        description: phrase to find
+        in: query
+        required: true
+        example: Nico
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns lastest post information in which phrase occured
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  title:
+                    type: string
+                  url:
+                    type: string
+                  id:
+                    type: string
+  /find/post/{post_id}/:
+    get:
+      tags :
+        - generic reddit
+      summary: Returns number of given phrase occurencies in post given by id
+      operationId: app.count_phrase_comments
+      parameters:
+      - name: post_id
+        description: ID of the reddit post
+        in: path
+        required: true
+        example: f48ce1
+        schema:
+          type: string
+      - name: phrase
+        description: phrase to find
+        in: query
+        required: true
+        example: it
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns number of occurencies
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  occurencies:
+                    type: integer
+  /picture:
+    get:
+      tags :
+        - generic reddit
+      summary: Returns url to picture located in given reddit post, or if there is no picture - to post itself.
+      operationId: app.picture_post
+      parameters:
+      - name: post_id
+        description: ID of the reddit post
+        in: query
+        required: true
+        example: f46jgn
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns URL to picture
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+  /subscribers:
+    get:
+      tags :
+        - generic reddit
+      summary: Returns amount of subcribers in given subreddit
+      operationId: app.subscribers_subreddit
+      parameters:
+      - name: subreddit
+        description: Name of the subreddit
+        in: query
+        required: true
+        example: formula1
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Returns amount of subscribers
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  subscribers:
+                    type: integer
+  /drivers:
+    get:
+      tags :
+        - formula 1 driver statistics
+      summary: Returns all info about how often people mention all drivers
+      operationId: app.get_drivers
+      responses:
+        '200':
+          description: Returns driver statistics
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  drivers:
+                    type: object
+  /drivers/{driver_id}:
+    get:
+      tags :
+        - formula 1 driver statistics
+      summary: Returns info about how often people mention all drivers
+      operationId: app.get_drivers_id
+      parameters:
+      - name: driver_id
+        description: id of the DB data
+        in: path
+        required: true
+        example: 0
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Returns driver statistics
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  drivers:
+                    type: object
+    delete:
+      tags :
+        - formula 1 driver statistics
+      summary: Deletes info about how often people mention all drivers from DB
+      operationId: app.delete_drivers_id
+      parameters:
+      - name: driver_id
+        description: id of the DB data
+        in: path
+        required: true
+        example: 0
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Deletes driver statistics from DB
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  drivers:
+                    type: object
+    put:
+      tags :
+        - formula 1 driver statistics
+      summary: Pushes info about how often people mention all drivers to DB
+      operationId: app.put_drivers
+      parameters:
+      - name: driver_id
+        description: id of the DB data
+        in: path
+        required: true
+        example: 0
+        schema:
+          type: integer
+      responses:
+        '200':
+          description: Pushes driver statistics to DB
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  drivers:
+                    type: object
+components:
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-bearerInfoFunc: app.decode_token
